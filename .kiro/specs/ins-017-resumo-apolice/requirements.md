@@ -4,7 +4,7 @@ dono_po: Igor
 faixa: semiautonoma
 dev_revisor: Mancz
 versao: 2
-status: rascunho
+status: aprovada
 ---
 
 # INS-017 · Resumo da apólice
