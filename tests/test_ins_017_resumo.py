@@ -57,6 +57,16 @@ def test_ins_017_ca_05_valor_com_tres_casas_levanta_erro_sem_arredondar():
         montar_resumo(Apolice("AP-0001", Decimal("100000.00"), Decimal("1200.005"), True))
 
 
+@pytest.mark.parametrize("campo", ["cobertura", "premio"])
+@pytest.mark.parametrize("valor", [Decimal("NaN"), Decimal("Infinity"), Decimal("-Infinity"), Decimal("1E+30")])
+def test_ins_017_ca_05_valor_nao_finito_ou_fora_da_precisao_levanta_erro(campo, valor):
+    """INS-017 CA-05: NaN, infinito e valor acima da precisão levantam ValorInvalido."""
+    valores = {"cobertura": Decimal("100000.00"), "premio": Decimal("1200.00")}
+    valores[campo] = valor
+    with pytest.raises(ValorInvalido):
+        montar_resumo(Apolice("AP-0001", valores["cobertura"], valores["premio"], True))
+
+
 def test_ins_017_ca_06_resumo_so_tem_os_quatro_campos():
     """INS-017 CA-06: o resumo só tem os quatro campos permitidos."""
     r = montar_resumo(Apolice("AP-0001", Decimal("100000.00"), Decimal("1200.00"), True))
@@ -133,6 +143,14 @@ def test_ins_017_ca_05_http_valor_nao_e_float(cliente):
 def test_ins_017_ca_05_http_valor_com_tres_casas_devolve_erro_generico(cliente):
     """INS-017 CA-05: valor da base com 3 casas devolve 500 genérico, sem detalhe interno."""
     api.repo.apolices["AP-0001"] = Apolice("AP-0001", Decimal("100000.001"), Decimal("1200.00"), True)
+    r = cliente.get("/apolices/AP-0001/resumo")
+    assert r.status_code == 500
+    assert r.json() == {"detail": "Erro interno."}
+
+
+def test_ins_017_ca_05_http_valor_nan_na_base_devolve_erro_generico(cliente):
+    """INS-017 CA-05: NaN na base devolve 500 genérico, sem detalhe interno."""
+    api.repo.apolices["AP-0001"] = Apolice("AP-0001", Decimal("NaN"), Decimal("1200.00"), True)
     r = cliente.get("/apolices/AP-0001/resumo")
     assert r.status_code == 500
     assert r.json() == {"detail": "Erro interno."}
