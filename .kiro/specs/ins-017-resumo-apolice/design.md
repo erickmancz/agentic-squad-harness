@@ -22,7 +22,7 @@ Regra de negócio fica em `resumo.py`, separada da camada HTTP (`03-stack-client
 ## 3. Fluxo da requisição
 
 1. `numero_valido`: regex `^AP-\d{4}$` aplicada com `fullmatch`. `AP-0001\n` não pode passar, por isso não se usa `$` sozinho. Se falhar, resposta HTTP 422 `Número de apólice inválido.`, sem auditoria e sem consultar o repositório (CA-04).
-2. Com o formato válido, grava a auditoria com o valor de `X-Solicitante`, o número e o horário UTC (CA-08). A gravação vem antes da busca, para existir trilha também de consulta a número válido inexistente, como AP-9999.
+2. Com o formato válido, grava a auditoria com o valor de `X-Solicitante`, o número e o horário UTC (CA-08). Sem o cabeçalho, segue o padrão das rotas atuais: o `usuario` gravado é `canal-app`, valor padrão de canal e não identificação de pessoa (decisão do FDE, ver D6). A gravação vem antes da busca, para existir trilha também de consulta a número válido inexistente, como AP-9999.
 3. `repo.buscar(numero)`. Se vier `None`, resposta de apólice não encontrada (CA-03).
 4. `montar_resumo`: projeta só os quatro campos permitidos (CA-01, CA-02, CA-06). Se cobertura ou prêmio tiver mais de 2 casas decimais, levanta `ValorInvalido`.
 5. Devolve 200. `ValorInvalido` vira erro genérico (ver seção 4).
@@ -39,7 +39,7 @@ Regra de negócio fica em `resumo.py`, separada da camada HTTP (`03-stack-client
 |---|---|---|
 | `apolice` | string | Número consultado |
 | `situacao` | `"ativa"` ou `"inativa"` | Derivada de `Apolice.ativa` |
-| `cobertura` | `Decimal`, serializado como string com 2 casas | Valor lido da base, sem recálculo (CA-05) |
+| `cobertura` | `Decimal`, serializado como string com 2 casas | Valor lido da base e transportado como `Decimal`, sem cálculo (CA-05) |
 | `premio` | `Decimal`, serializado como string com 2 casas | Idem |
 
 Erros, com corpo `{"detail": "<mensagem>"}` e sem detalhe interno:
@@ -56,12 +56,12 @@ A mensagem e o 404 de apólice não encontrada reaproveitam o padrão já usado 
 
 | # | Decisão | Motivo | CA |
 |---|---|---|---|
-| D1 | Cobertura e prêmio ficam como `Decimal` em todo o caminho; a resposta serializa string de 2 casas, igual ao `_serializar_valor` do histórico | Nunca `float`, nem em `json`, nem em parse de entrada | CA-05 |
+| D1 | Cobertura e prêmio são lidos da base e transportados como `Decimal` em todo o caminho, sem cálculo (texto do CA-05); a resposta serializa string de 2 casas, igual ao `_serializar_valor` do histórico | Nunca `float`, nem em `json`, nem em parse de entrada | CA-05 |
 | D2 | O resumo não calcula, não arredonda e não recalcula. Só formata o valor que a base já guarda. Valor com mais de 2 casas (detectado quando o valor difere do mesmo valor com 2 casas) levanta `ValorInvalido` e a rota devolve erro genérico. Completar com zeros (`1200` para `1200.00`) não é arredondar e é permitido | Bloco 8 proíbe arredondamento e cálculo. A divergência aparece em vez de ser escondida | CA-05 |
 | D3 | Modelo de resposta com os quatro campos e `extra` proibido. Nada é copiado do objeto da apólice por reflexão | Impede vazamento de dado pessoal se a base ganhar campos | CA-06 |
 | D4 | O repositório ganha só `registrar_consulta_resumo`. A rota usa `buscar`, que é leitura | Somente leitura | CA-07 |
 | D5 | Validação do formato antes do acesso ao repositório | Entrada validada antes da base | CA-04 |
-| D6 | A auditoria grava `usuario` (valor de `X-Solicitante`), `apolice` e `quando`. Não grava IP, nome, outros cabeçalhos nem dado do segurado. `X-Solicitante` é dado pessoal comum do atendente, declarado e não comprovado: o registro não prova quem consultou | Mínimo necessário para a finalidade (rastrear quem consultou). LGPD | CA-08 |
+| D6 | A auditoria grava `usuario` (valor de `X-Solicitante`), `apolice` e `quando`. Não grava IP, nome, outros cabeçalhos nem dado do segurado. `X-Solicitante` é dado pessoal comum do atendente, declarado e não comprovado: o registro não prova quem consultou. Sem o cabeçalho, grava `canal-app`, o valor padrão de canal usado nas rotas atuais, que não identifica pessoa (decisão do FDE). O dado pessoal só existe na auditoria quando o chamador informa o cabeçalho | Mínimo necessário para a finalidade (rastrear quem consultou). LGPD. Consistência com as rotas atuais | CA-08 |
 | D7 | Rota nova no `app` existente, sem router novo e sem mexer nas rotas de INS-014, INS-016 e INS-018 | Compatibilidade | bloco 10 |
 | D8 | Teste de desempenho em memória como sinal de regressão. A medição do p95 real fica para ambiente com a base real | O repositório atual é em memória e não representa a base de produção | CA-09 |
 | D9 | Nenhuma expiração ou descarte dos registros de auditoria. A lista em memória não tem rotina de descarte | Descarte automático após 6 meses é fora de escopo (bloco 8) | CA-08 |
@@ -78,16 +78,14 @@ A mensagem e o 404 de apólice não encontrada reaproveitam o padrão já usado 
 | Risco | Efeito | Mitigação |
 |---|---|---|
 | `X-Solicitante` é declarado e forjável | A auditoria pode registrar identidade falsa | Aceito pela spec (declarado, não comprovado). Documentado em D6; não usar a auditoria como prova de identidade |
-| `X-Solicitante` é dado pessoal do atendente | Tratamento sem prazo de descarte | Finalidade e retenção de 6 meses no bloco 6, a confirmar pelo cliente. Descarte automático fica para story futura (D9) |
+| Consulta sem `X-Solicitante` | A auditoria registra `canal-app`, sem identificar quem consultou | Decisão do FDE: segue o padrão das rotas atuais. `canal-app` é valor padrão de canal, não dado pessoal. O CA-08 cobre só o caso com cabeçalho; o caso sem cabeçalho é coberto pelo teste da T-05 |
+| `X-Solicitante` é dado pessoal do atendente (só quando o chamador o informa) | Tratamento sem prazo de descarte | Finalidade e retenção de 6 meses no bloco 6, a confirmar pelo cliente. Descarte automático fica para story futura (D9) |
 | Regex com `$` aceita quebra de linha final | Número inválido passa | `fullmatch` e teste com `AP-0001\n` |
 | Valor da base com mais de 2 casas | Consulta falha | Erro genérico intencional (D2); sem arredondar |
 | Auditoria em memória some ao reiniciar | Perda de trilha | Mesmo padrão de `auditoria` e `simulacoes`. Persistência fora desta story |
-| CA-09 não prova p95 com a base real | Falsa segurança | D8 e pendência registrada na tarefa T-07 |
+| CA-09 não prova p95 com a base real | Falsa segurança | D8 e pendência registrada na tarefa T-06 |
 | Rota sem controle de acesso | Qualquer chamador consulta prêmio e cobertura | Decisão do PO, registrada como fora de escopo (bloco 8) |
 
 ## 8. Dúvidas para o FDE
 
-Nenhuma é pergunta em aberto da spec. As dúvidas anteriores foram respondidas pela v2 e saíram deste documento.
-
-1. **`X-Solicitante` ausente (CA-08).** O CA-08 trata o caso "com o cabeçalho informado". A spec não diz o que fazer sem ele. As rotas atuais usam um valor padrão (`canal-app`) quando o cabeçalho falta. Proposta: seguir esse padrão e gravar o valor padrão. Alternativa: recusar a consulta. Qual vale?
-2. **Texto do CA-05.** O CA diz que cobertura e prêmio são "calculados e transportados como `Decimal`", mas o bloco 8 proíbe cálculo. Leio como "lidos e transportados", sem cálculo. Confirma?
+Nenhuma.

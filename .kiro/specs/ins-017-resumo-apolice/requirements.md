@@ -4,7 +4,7 @@ dono_po: Igor
 faixa: semiautonoma
 dev_revisor: Mancz
 versao: 2
-status: aprovada
+status: rascunho
 ---
 
 # INS-017 · Resumo da apólice
@@ -33,7 +33,7 @@ status: aprovada
 - CA-02: Dado que existe a apólice AP-0002 inativa, com cobertura 80.000,00 e prêmio 950,00, quando o atendente consulta o número AP-0002, então a resposta traz situação inativa, cobertura "80000.00" e prêmio "950.00".
 - CA-03: Dado que não existe a apólice AP-9999, quando o atendente consulta o número AP-9999, então a resposta é a mensagem de apólice não encontrada.
 - CA-04: Dado um número fora do formato `AP-` seguido de exatamente 4 dígitos (por exemplo 12345, AP-123 ou AP-12345), quando o atendente consulta esse número, então a resposta é HTTP 422 com a mensagem "Número de apólice inválido." e a base não é consultada.
-- CA-05: Dado qualquer consulta bem-sucedida, quando a resposta é montada, então cobertura e prêmio são calculados e transportados como `Decimal` e serializados como string com duas casas decimais (por exemplo "100000.00"), nunca como ponto flutuante.
+- CA-05: Dado qualquer consulta bem-sucedida, quando a resposta é montada, então cobertura e prêmio são lidos da base e transportados como `Decimal`, sem cálculo, e serializados como string com duas casas decimais (por exemplo "100000.00"), nunca como ponto flutuante.
 - CA-06: Dado qualquer consulta, quando a resposta é devolvida, então ela não contém nenhum dado pessoal do segurado.
 - CA-07: Dado qualquer consulta, quando ela é executada, então nenhum dado é criado, alterado ou removido na base (somente leitura).
 - CA-08: Dado uma consulta de número com formato válido (existente, como AP-0001, ou inexistente, como AP-9999) com o cabeçalho `X-Solicitante` informado, quando a consulta é executada, então é gravado um registro de auditoria com o valor de `X-Solicitante` (dado pessoal do atendente), o número da apólice e o horário, e nenhum outro dado pessoal (nem do atendente, como IP, nome ou cabeçalhos, nem do segurado).
