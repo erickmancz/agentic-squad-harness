@@ -1,0 +1,35 @@
+{
+  "spec_id": "INS-017",
+  "aprovacoes": [
+    {
+      "papel": "po",
+      "nome": "Igor",
+      "branch": "",
+      "commit": "",
+      "ts": "2026-11-13T18:33:14Z",
+      "canal": "chat-declarado",
+      "texto_humano": "APROVO",
+      "portao": "859ef998"
+    },
+    {
+      "papel": "design",
+      "nome": "Erick",
+      "branch": "feat/ins-017",
+      "commit": "c948d12b411cd9cb97d72e9cb80d973221004577",
+      "ts": "2026-11-13T18:35:03Z",
+      "canal": "chat-declarado",
+      "texto_humano": "APROVO",
+      "portao": "024d9875"
+    },
+    {
+      "papel": "fde",
+      "nome": "Erick",
+      "branch": "feat/ins-017",
+      "commit": "7a272d28c94a3ecc8e2c26acc593e84506684b57",
+      "ts": "2026-11-13T18:42:38Z",
+      "canal": "chat-declarado",
+      "texto_humano": "APROVO",
+      "portao": "c60b7951"
+    }
+  ]
+}

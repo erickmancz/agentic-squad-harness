@@ -16,6 +16,7 @@ class Repositorio:
         self.auditoria: list[dict] = []
         self.simulacoes: list[dict] = []
         self.historico_endossos: dict[str, list[dict]] = {}
+        self.consultas_resumo: list[dict] = []
         self.semear()
 
     def semear(self) -> None:
@@ -90,5 +91,13 @@ class Repositorio:
             "cobertura_pedida": str(cobertura_pedida.quantize(CENTAVOS)),
             "premio_simulado": str(premio_simulado.quantize(CENTAVOS)),
             "solicitante": solicitante,
+            "quando": datetime.now(timezone.utc).isoformat(),
+        })
+
+    def registrar_consulta_resumo(self, numero: str, solicitante: str) -> None:
+        """Registra a auditoria da consulta de resumo: só apolice, usuario e quando (INS-017 CA-08)."""
+        self.consultas_resumo.append({
+            "apolice": numero,
+            "usuario": solicitante,
             "quando": datetime.now(timezone.utc).isoformat(),
         })

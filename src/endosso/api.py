@@ -4,9 +4,10 @@ from __future__ import annotations
 import re
 from datetime import timezone
 from decimal import Decimal
+from typing import Literal
 
 from fastapi import FastAPI, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.endosso.regras import (
     ApoliceInativa,
@@ -17,6 +18,7 @@ from src.endosso.regras import (
     simular_premio,
 )
 from src.endosso.repositorio import Repositorio
+from src.endosso.resumo import ValorInvalido, montar_resumo, numero_valido
 
 # Número de apólice: AP seguido de hífen e 4 dígitos (ex.: AP-0001), conforme blocos 6 e 9 da INS-016.
 FORMATO_APOLICE = re.compile(r"^AP-\d{4}$")
@@ -139,3 +141,39 @@ def historico_endossos(numero: str, x_solicitante: str = Header(default="canal-a
         raise HTTPException(status_code=404, detail="Apólice não encontrada.")
     itens = build_history(repo.endossos_de(numero))
     return [_serializar_item(i) for i in itens]
+
+
+# --- INS-017 · resumo da apólice (somente leitura) ---
+
+
+class ResumoApoliceResposta(BaseModel):
+    """Resumo da apólice com os quatro campos permitidos e nenhum dado pessoal (INS-017 CA-06)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    apolice: str
+    situacao: Literal["ativa", "inativa"]
+    cobertura: str
+    premio: str
+
+
+@app.get("/apolices/{numero}/resumo", response_model=ResumoApoliceResposta)
+def resumo_apolice(numero: str, x_solicitante: str = Header(default="canal-app")) -> ResumoApoliceResposta:
+    """Devolve número, situação, cobertura e prêmio da apólice e audita a consulta (INS-017 CA-01 a CA-08)."""
+    if not numero_valido(numero):
+        raise HTTPException(status_code=422, detail="Número de apólice inválido.")
+    # Auditoria antes da busca, para haver trilha também de número válido inexistente (CA-08).
+    repo.registrar_consulta_resumo(numero, x_solicitante)
+    apolice = repo.buscar(numero)
+    if apolice is None:
+        raise HTTPException(status_code=404, detail="Apólice não encontrada.")
+    try:
+        resumo = montar_resumo(apolice)
+    except ValorInvalido as e:
+        raise HTTPException(status_code=500, detail="Erro interno.") from e
+    return ResumoApoliceResposta(
+        apolice=resumo["apolice"],
+        situacao=resumo["situacao"],
+        cobertura=str(resumo["cobertura"]),
+        premio=str(resumo["premio"]),
+    )
