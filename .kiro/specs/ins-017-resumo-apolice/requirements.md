@@ -14,7 +14,7 @@ status: rascunho
 - Dono (PO): Igor
 - FDE: Erick
 - Dev revisor: Mancz (nomeado; só atua se a faixa passar para `critica`)
-- Faixa proposta: semiautonoma. Novo endpoint somente de leitura, sem dado pessoal; prêmio e cobertura são exibidos, não calculados nem alterados, então não entram na linha `critica` (a lente financeira trata regra que altera valor cobrado ou pago). Decisão humana: semiautonoma. A app de exemplo não tem mecanismo de autenticação e esta story não cria controle de acesso (ver "Fora de escopo" no bloco 8); se a story passar a criar autenticação ou perfil, a faixa sobe para `critica`.
+- Faixa proposta: semiautonoma. Novo endpoint somente de leitura, sem dado pessoal do segurado (a auditoria grava só o `X-Solicitante`, dado pessoal comum do atendente, não sensível); prêmio e cobertura são exibidos, não calculados nem alterados, então não entram na linha `critica` (a lente financeira trata regra que altera valor cobrado ou pago). Decisão humana: semiautonoma. A app de exemplo não tem mecanismo de autenticação e esta story não cria controle de acesso (ver "Fora de escopo" no bloco 8); se a story passar a criar autenticação ou perfil, a faixa sobe para `critica`.
 - Lente ativa: serviços financeiros (seguros).
 - Versão: 2
 
@@ -36,7 +36,7 @@ status: rascunho
 - CA-05: Dado qualquer consulta bem-sucedida, quando a resposta é montada, então cobertura e prêmio são calculados e transportados como `Decimal` e serializados como string com duas casas decimais (por exemplo "100000.00"), nunca como ponto flutuante.
 - CA-06: Dado qualquer consulta, quando a resposta é devolvida, então ela não contém nenhum dado pessoal do segurado.
 - CA-07: Dado qualquer consulta, quando ela é executada, então nenhum dado é criado, alterado ou removido na base (somente leitura).
-- CA-08: Dado uma consulta de número com formato válido (existente, como AP-0001, ou inexistente, como AP-9999) com o cabeçalho `X-Solicitante` informado, quando a consulta é executada, então é gravado um registro de auditoria com o valor de `X-Solicitante`, o número da apólice e o horário, sem nenhum dado pessoal do segurado.
+- CA-08: Dado uma consulta de número com formato válido (existente, como AP-0001, ou inexistente, como AP-9999) com o cabeçalho `X-Solicitante` informado, quando a consulta é executada, então é gravado um registro de auditoria com o valor de `X-Solicitante` (dado pessoal do atendente), o número da apólice e o horário, e nenhum outro dado pessoal (nem do atendente, como IP, nome ou cabeçalhos, nem do segurado).
 - CA-09: Dado o uso normal da consulta, quando se mede o tempo de resposta, então o percentil 95 é de até 2 segundos.
 
 ## 5. Referências de UX
@@ -46,13 +46,14 @@ status: rascunho
 - APIs lidas: base de apólices (número, situação, cobertura atual, prêmio atual). Fonte dos campos: o `Repositorio.buscar` existente.
 - APIs escritas: nenhuma na base de apólices; só o registro de auditoria da consulta.
 - Permissões: somente leitura. A app de exemplo não tem autenticação; nenhum controle de acesso é criado nesta story.
-- Auditoria de acesso: cada consulta de número de formato válido (existente ou não) registra o valor do cabeçalho `X-Solicitante`, o número da apólice e o horário, sem dado pessoal do segurado. O valor de `X-Solicitante` é declarado pelo chamador e não é comprovado: o registro não prova a identidade de quem consultou.
-- Dados pessoais e finalidade: nenhum dado pessoal é lido nem devolvido. Cobertura e prêmio são dados financeiros da apólice, expostos só para o atendente confirmar a situação com o segurado.
+- Auditoria de acesso: cada consulta de número de formato válido (existente ou não) registra o valor do cabeçalho `X-Solicitante`, o número da apólice e o horário. O valor de `X-Solicitante` é declarado pelo chamador e não é comprovado: o registro não prova a identidade de quem consultou.
+- Dado pessoal do atendente (`X-Solicitante`): o valor gravado na auditoria identifica quem consultou e é dado pessoal comum (do atendente), não sensível. Finalidade: rastrear quem consultou cada apólice, para auditoria de acesso. Retenção: 6 meses para o registro de auditoria (`X-Solicitante`, número da apólice e horário). O prazo e a base legal serão confirmados pelo cliente na homologação. O registro de auditoria não leva nenhum outro dado pessoal: nem do atendente (IP, nome ou outros cabeçalhos), nem do segurado. O `X-Solicitante` é declarado, não comprovado.
+- Dados pessoais e finalidade: a consulta não lê nem devolve dado pessoal do segurado; o único dado pessoal tratado é o `X-Solicitante` gravado na auditoria, descrito acima. Cobertura e prêmio são dados financeiros da apólice, expostos só para o atendente confirmar a situação com o segurado.
 
 ## 7. Não funcionais
 - Segurança: apenas leitura; entrada validada antes de qualquer acesso à base (formato do número, com HTTP 422 e a mensagem "Número de apólice inválido."); erros sem detalhes internos; sem controle de acesso nesta story (ver bloco 8).
-- LGPD: resposta sem dado pessoal do segurado. Logs e registro de auditoria não registram dado pessoal.
-- Auditoria: `X-Solicitante` (declarado, não comprovado), número da apólice e horário de cada consulta de formato válido (CA-08).
+- LGPD: resposta sem dado pessoal do segurado. Logs não registram dado pessoal além do `X-Solicitante` na auditoria. O registro de auditoria contém um dado pessoal (`X-Solicitante`, do atendente) e nenhum outro; finalidade e retenção (6 meses, a confirmar pelo cliente na homologação) no bloco 6.
+- Auditoria: `X-Solicitante` (dado pessoal do atendente, declarado, não comprovado), número da apólice e horário de cada consulta de formato válido (CA-08).
 - Desempenho: p95 de até 2 segundos (CA-09).
 - Acessibilidade: não se aplica, não há tela.
 
@@ -60,6 +61,7 @@ status: rascunho
 - O agente não decide sozinho nem cria autenticação, perfil ou controle de acesso, nem qualquer regra de arredondamento ou cálculo de valores (os valores são exibidos como estão na base). Se a base trouxer valor com mais de 2 casas decimais, ele não é arredondado: a consulta devolve erro genérico, sem detalhes internos.
 - O agente não altera endosso, simulação nem histórico de endossos, e não escreve na base de apólices.
 - Fora de escopo: controle de acesso (autenticação e perfis) da consulta fica para uma story própria.
+- Fora de escopo: expiração e descarte automático dos registros de auditoria após 6 meses. A auditoria desta story é em memória; o descarte por prazo fica para quando houver armazenamento persistente.
 
 ## 9. Testes e exemplos
 - Cenários de sucesso: AP-0001 (ativa, "100000.00", "1200.00") e AP-0002 (inativa, "80000.00", "950.00").
