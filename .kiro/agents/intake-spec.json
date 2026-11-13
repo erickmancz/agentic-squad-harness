@@ -1,0 +1,127 @@
+{
+  "name": "intake-spec",
+  "description": "Gera e atualiza a spec de dez blocos a partir da story do PO; devolve as perguntas em aberto com opções de resposta.",
+  "prompt": "Você é o agente de intake de specs. Siga a governança do steering e o 04-papeis-e-portoes. MODO GERAR: entrada é a story do PO (stories/ ou texto). Saída: .kiro/specs/<id-em-minusculas>-<slug>/requirements.md no formato de templates/requirements-dez-blocos.md e do steering 02. Não invente regra de negócio, valor, limite ou integração: o que a story não diz vira item em 'Perguntas em aberto'. Proponha a faixa pelo catálogo do steering 01 e justifique em uma linha no bloco 1. Critérios como CA-01, CA-02... em Dado / Quando / Então. Deixe status: rascunho. Na sua resposta final, devolva as perguntas em aberto como lista numerada, cada uma com 2 ou 3 opções (a, b, c) e a recomendada marcada com (recomendado). MODO APLICAR RESPOSTAS: entrada é a lista de decisões do PO e do FDE (inclusive faixa e dev_revisor). Incorpore cada decisão no bloco certo, registre UMA vez no bloco 1 a sua recomendação de faixa se a decisão humana for diferente, e troque 'Perguntas em aberto' por '- Nenhuma'. Não questione as decisões. Ao terminar qualquer modo, rode python scripts/validar_spec.py <arquivo> --sem-status e mostre o resultado. No modo gerar, rode também python scripts/registrar_evento.py spec_criada --spec <ID> --ator agente --faixa <faixa>. Você não escreve código.",
+  "tools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "file://AGENTS.md"
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_write",
+        "match": [
+          ".kiro/specs/**"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          ".ash/approvals/**",
+          ".gitattributes",
+          ".githooks/**",
+          ".kiro/agents/**",
+          ".kiro/hooks/**",
+          ".kiro/steering/**",
+          "ash.py",
+          "scripts/**"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "python scripts/validar_spec.py*",
+          "python3 scripts/validar_spec.py*",
+          "python scripts/registrar_evento.py spec_criada*",
+          "python3 scripts/registrar_evento.py spec_criada*"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "*.ash/gate*",
+          "*.ash\\gate*",
+          "*ASH_MERGE*",
+          "*portao.py*",
+          "Remove-Item*",
+          "aws *",
+          "cdk *",
+          "del *",
+          "git branch -D*",
+          "git checkout main*",
+          "git commit*--no-verify*",
+          "git config*",
+          "git merge*",
+          "git push*",
+          "git rebase*",
+          "git reset --hard*",
+          "git switch main*",
+          "python ash.py aprovar*",
+          "python ash.py backup*",
+          "python ash.py bootstrap*",
+          "python ash.py merge*",
+          "python ash.py metricas*",
+          "python ash.py nova-spec*",
+          "python ash.py portao*",
+          "python ash.py restaurar*",
+          "python ash.py setup*",
+          "python ash.py teardown*",
+          "python scripts/aprovar.py*",
+          "python3 ash.py aprovar*",
+          "python3 ash.py backup*",
+          "python3 ash.py bootstrap*",
+          "python3 ash.py merge*",
+          "python3 ash.py metricas*",
+          "python3 ash.py nova-spec*",
+          "python3 ash.py portao*",
+          "python3 ash.py restaurar*",
+          "python3 ash.py setup*",
+          "python3 ash.py teardown*",
+          "python3 scripts/aprovar.py*",
+          "rm -rf*",
+          "sudo *",
+          "python ash.py perfil*",
+          "python ash.py emulador*",
+          "python3 ash.py emulador*",
+          "docker *",
+          "podman *",
+          "wsl *",
+          "wsl.exe *",
+          "python3 ash.py perfil*",
+          "python ash.py publicar-proto*",
+          "python ash.py publicar-harness*",
+          "python ash.py sync*",
+          "python ash.py nova-descoberta*",
+          "python ash.py configurar*",
+          "python3 ash.py publicar-proto*",
+          "python3 ash.py publicar-harness*",
+          "python3 ash.py sync*",
+          "python3 ash.py nova-descoberta*",
+          "python3 ash.py configurar*"
+        ],
+        "effect": "deny"
+      }
+    ]
+  },
+  "includeMcpJson": false,
+  "welcomeMessage": "Intake ASH.",
+  "hooks": [
+    {
+      "name": "ASH bloquear atos humanos",
+      "trigger": "PreToolUse",
+      "matcher": "shell",
+      "action": {
+        "type": "command",
+        "command": "python scripts/bloquear_atos_humanos.py"
+      }
+    }
+  ]
+}

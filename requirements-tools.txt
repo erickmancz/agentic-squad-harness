@@ -1,0 +1,8 @@
+# Ferramentas do harness em ambiente separado (.venv-tools) para não conflitar com o app
+semgrep==1.181.0
+pip-audit==2.10.1
+# pytest roda os testes do próprio harness (python ash.py testar-harness), em qualquer stack
+pytest==9.1.1
+# boto3 é usado só pelos testes de integração do harness contra o AWS Emulator (python ash.py testar-harness --integracao);
+# mesma versão de infra/requirements.txt. O boto3 de um projeto cliente fica no requirements.txt dele.
+boto3==1.43.122

@@ -1,0 +1,133 @@
+{
+  "name": "revisor-divida",
+  "description": "Revisor de dívida técnica. Escreve só em reviews/ e não corrige.",
+  "prompt": "Siga a governança do steering. Revisor de dívida técnica. Leia a mudança com git diff main...HEAD e o código tocado. Escreva reviews/<ID>-divida.md com: duplicação, função longa demais, acoplamento entre regra de negócio e HTTP, uso de float para dinheiro, TODO sem dono. Cada item com arquivo, linha e esforço estimado (P, M, G). Você não corrige nada. O ID da spec vem do front matter do requirements.md que o squad-lead indicar.",
+  "tools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "file://AGENTS.md"
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_write",
+        "match": [
+          "reviews/**"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          "src/**",
+          "tests/**",
+          ".kiro/**"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          ".ash/approvals/**",
+          ".gitattributes",
+          ".githooks/**",
+          ".kiro/agents/**",
+          ".kiro/hooks/**",
+          ".kiro/steering/**",
+          "ash.py",
+          "scripts/**"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "git diff*",
+          "git log*"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "*.ash/gate*",
+          "*.ash\\gate*",
+          "*ASH_MERGE*",
+          "*portao.py*",
+          "Remove-Item*",
+          "aws *",
+          "cdk *",
+          "del *",
+          "git branch -D*",
+          "git checkout main*",
+          "git commit*--no-verify*",
+          "git config*",
+          "git merge*",
+          "git push*",
+          "git rebase*",
+          "git reset --hard*",
+          "git switch main*",
+          "python ash.py aprovar*",
+          "python ash.py backup*",
+          "python ash.py bootstrap*",
+          "python ash.py merge*",
+          "python ash.py metricas*",
+          "python ash.py nova-spec*",
+          "python ash.py portao*",
+          "python ash.py restaurar*",
+          "python ash.py setup*",
+          "python ash.py teardown*",
+          "python scripts/aprovar.py*",
+          "python3 ash.py aprovar*",
+          "python3 ash.py backup*",
+          "python3 ash.py bootstrap*",
+          "python3 ash.py merge*",
+          "python3 ash.py metricas*",
+          "python3 ash.py nova-spec*",
+          "python3 ash.py portao*",
+          "python3 ash.py restaurar*",
+          "python3 ash.py setup*",
+          "python3 ash.py teardown*",
+          "python3 scripts/aprovar.py*",
+          "rm -rf*",
+          "sudo *",
+          "python ash.py perfil*",
+          "python ash.py emulador*",
+          "python3 ash.py emulador*",
+          "docker *",
+          "podman *",
+          "wsl *",
+          "wsl.exe *",
+          "python3 ash.py perfil*",
+          "python ash.py publicar-proto*",
+          "python ash.py publicar-harness*",
+          "python ash.py sync*",
+          "python ash.py nova-descoberta*",
+          "python ash.py configurar*",
+          "python3 ash.py publicar-proto*",
+          "python3 ash.py publicar-harness*",
+          "python3 ash.py sync*",
+          "python3 ash.py nova-descoberta*",
+          "python3 ash.py configurar*"
+        ],
+        "effect": "deny"
+      }
+    ]
+  },
+  "includeMcpJson": false,
+  "hooks": [
+    {
+      "name": "ASH bloquear atos humanos",
+      "trigger": "PreToolUse",
+      "matcher": "shell",
+      "action": {
+        "type": "command",
+        "command": "python scripts/bloquear_atos_humanos.py"
+      }
+    }
+  ]
+}

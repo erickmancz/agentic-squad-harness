@@ -1,0 +1,71 @@
+{
+  "modelo": true,
+  "nome": "<nome-da-stack>",
+  "descricao": "<linguagem, framework de teste, ferramenta de SAST e de dependências>",
+  "testado": false,
+  "pasta_codigo": "src",
+  "pasta_testes": "tests",
+  "arquivos_teste": [
+    "<padrão glob dos arquivos de teste, a partir da raiz do repositório>"
+  ],
+  "cobertura_minima": 80,
+  "setup": [
+    [
+      "<comando que instala as dependências do projeto>"
+    ]
+  ],
+  "testar": [
+    "<comando rápido que roda os testes, sem cobertura>"
+  ],
+  "etapas": [
+    {
+      "nome": "testes",
+      "comando": [
+        "<comando que roda os testes e falha se a cobertura ficar abaixo de {cobertura}>"
+      ]
+    },
+    {
+      "nome": "sast",
+      "comando": [
+        "{semgrep}",
+        "scan",
+        "--config",
+        ".semgrep/",
+        "--metrics=off",
+        "--error",
+        "--quiet",
+        "{codigo}/"
+      ]
+    },
+    {
+      "nome": "dependencias",
+      "comando": [
+        "<comando que audita vulnerabilidades das dependências e falha se achar>"
+      ]
+    },
+    {
+      "nome": "harness",
+      "comando": [
+        "{python}",
+        "ash.py",
+        "testar-harness"
+      ]
+    }
+  ],
+  "_instrucoes": [
+    "Copie este arquivo para perfis/<nome-da-stack>.json, troque todo texto entre < > e apague a chave modelo.",
+    "Cada comando é uma lista: o primeiro item é o programa, os demais são argumentos. Não use operadores de shell (|, &&, >).",
+    "Marcadores aceitos: {python} (Python do harness), {py} (Python da .venv do projeto), {semgrep} e {pip-audit} (ferramentas da .venv-tools), {cobertura}, {codigo} e {testes}.",
+    "Cada etapa precisa sair com código 0 quando está tudo certo e diferente de 0 quando falha. O CI do ASH só lê o código de saída.",
+    "A cobertura mínima precisa ser imposta pelo próprio comando de testes (opção da ferramenta ou configuração do projeto).",
+    "As regras de .semgrep/ que vêm no template são de Python. Para outra linguagem, acrescente regras da linguagem em .semgrep/ ou troque a etapa sast.",
+    "Os testes precisam citar '<ID da spec> CA-NN' no nome, na docstring ou em comentário, para o rastreio de aceite encontrar.",
+    "Depois de preencher, rode python ash.py perfil <nome-da-stack> e publique pelo portão publicar-harness.",
+    "Mantenha os nomes testes, sast e dependencias: os revisores de cobertura e de vulnerabilidade chamam python ash.py etapa com esses nomes. Etapas extras (ex.: integração contra o AWS Emulator) podem ter qualquer outro nome.",
+    "Todo perfil leva a etapa harness, sem alterar o comando: ela roda os testes do próprio ASH (tests_harness/) com o pytest da .venv-tools, independentemente da stack do projeto. Não a troque nem a remova; o python ash.py perfil avisa se faltar.",
+    "Projeto que chama serviços AWS: use perfis/python-aws.json como exemplo (não está neste modelo de propósito: um perfil sem AWS não deve exigir o emulador). Ele acrescenta ao perfil um bloco emulador_aws (versao fixada do AWS Emulator, pacote_url_base do canal LTS, fonte, servicos com a fidelidade em percentual 'k de n' da página de releases da versão fixada, fidelidade_minima de 0 a 100) e uma etapa com \"requer\": \"emulador_aws\" que roda os testes de integração do projeto, em pasta própria, ignorada pela etapa testes.",
+    "Campo requer: uma etapa com \"requer\": \"emulador_aws\" só roda com o emulador de pé (python ash.py emulador iniciar) e recebe, no ambiente do processo filho, o endpoint local, as credenciais geradas pelo emulador e o certificado. O único valor aceito é emulador_aws, e o perfil precisa ter o bloco emulador_aws. Sem o emulador, a etapa falha com mensagem clara; ASH_PULAR=<nome da etapa> a pula (o CI sai com código 3 e o merge recusa).",
+    "O projeto que usa AWS declara o boto3, com versão exata (boto3==X.Y.Z), no próprio requirements.txt: a etapa dependencias só audita esse arquivo. O python ash.py perfil e o ci avisam se o perfil tem emulador_aws e o boto3 está ausente ou sem versão exata. Regra de fidelidade por faixa: steering 01.",
+    "ASH_COBERTURA_MIN sobrescreve cobertura_minima numa execução. ASH_PULAR pula etapas do perfil (o CI sai com código 3 e o merge recusa); spec-gate e rastreio nunca podem ser pulados."
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "name": "revisor-cobertura",
+  "description": "Revisor de cobertura. Escreve só em reviews/ e não corrige.",
+  "prompt": "Siga a governança do steering. Revisor de cobertura. Rode python scripts/rastrear_aceite.py e python ash.py etapa testes (testes com cobertura, conforme o perfil de stack). Escreva reviews/<ID>-cobertura.md com: critérios CA sem teste, percentual de cobertura e trechos sem cobertura relevantes para a spec. Você não escreve testes. O ID da spec vem do front matter do requirements.md que o squad-lead indicar.",
+  "tools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "file://AGENTS.md"
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_write",
+        "match": [
+          "reviews/**"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          "src/**",
+          "tests/**",
+          ".kiro/**"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          ".ash/approvals/**",
+          ".gitattributes",
+          ".githooks/**",
+          ".kiro/agents/**",
+          ".kiro/hooks/**",
+          ".kiro/steering/**",
+          "ash.py",
+          "scripts/**"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "python scripts/rastrear_aceite.py*",
+          "python3 scripts/rastrear_aceite.py*",
+          "python ash.py etapa testes*",
+          "python3 ash.py etapa testes*"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "*.ash/gate*",
+          "*.ash\\gate*",
+          "*ASH_MERGE*",
+          "*portao.py*",
+          "Remove-Item*",
+          "aws *",
+          "cdk *",
+          "del *",
+          "git branch -D*",
+          "git checkout main*",
+          "git commit*--no-verify*",
+          "git config*",
+          "git merge*",
+          "git push*",
+          "git rebase*",
+          "git reset --hard*",
+          "git switch main*",
+          "python ash.py aprovar*",
+          "python ash.py backup*",
+          "python ash.py bootstrap*",
+          "python ash.py merge*",
+          "python ash.py metricas*",
+          "python ash.py nova-spec*",
+          "python ash.py portao*",
+          "python ash.py restaurar*",
+          "python ash.py setup*",
+          "python ash.py teardown*",
+          "python scripts/aprovar.py*",
+          "python3 ash.py aprovar*",
+          "python3 ash.py backup*",
+          "python3 ash.py bootstrap*",
+          "python3 ash.py merge*",
+          "python3 ash.py metricas*",
+          "python3 ash.py nova-spec*",
+          "python3 ash.py portao*",
+          "python3 ash.py restaurar*",
+          "python3 ash.py setup*",
+          "python3 ash.py teardown*",
+          "python3 scripts/aprovar.py*",
+          "rm -rf*",
+          "sudo *",
+          "python ash.py perfil*",
+          "python ash.py emulador*",
+          "python3 ash.py emulador*",
+          "docker *",
+          "podman *",
+          "wsl *",
+          "wsl.exe *",
+          "python3 ash.py perfil*",
+          "python ash.py publicar-proto*",
+          "python ash.py publicar-harness*",
+          "python ash.py sync*",
+          "python ash.py nova-descoberta*",
+          "python ash.py configurar*",
+          "python3 ash.py publicar-proto*",
+          "python3 ash.py publicar-harness*",
+          "python3 ash.py sync*",
+          "python3 ash.py nova-descoberta*",
+          "python3 ash.py configurar*"
+        ],
+        "effect": "deny"
+      }
+    ]
+  },
+  "includeMcpJson": false,
+  "hooks": [
+    {
+      "name": "ASH bloquear atos humanos",
+      "trigger": "PreToolUse",
+      "matcher": "shell",
+      "action": {
+        "type": "command",
+        "command": "python scripts/bloquear_atos_humanos.py"
+      }
+    }
+  ]
+}

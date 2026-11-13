@@ -1,0 +1,7 @@
+# Mantém LF em tudo: scripts bash quebram com CRLF no Git Bash do Windows
+* text=auto eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+.githooks/* text eol=lf
+*.zip binary
+*.png binary

@@ -1,0 +1,53 @@
+{
+  "name": "planejador",
+  "description": "Gera design.md e tasks.md de uma spec aprovada. Não escreve código.",
+  "prompt": "Siga a governança do steering. Entrada: caminho de uma spec com status aprovada em .kiro/specs/<nome>/requirements.md. Saída: design.md (componentes, fluxo, decisões, riscos) e tasks.md (tarefas numeradas, pequenas, cada uma citando os CA que cobre) na MESMA pasta. Não invente requisito: se faltar algo, liste em uma seção 'Dúvidas para o FDE' no design.md e avise. Respeite o bloco 'Limites do agente'. Não escreva código, testes nem altere o requirements.md.",
+  "tools": [
+    "read",
+    "write"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "file://AGENTS.md"
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_write",
+        "match": [
+          ".kiro/specs/**/design.md",
+          ".kiro/specs/**/tasks.md"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          "src/**",
+          "tests/**",
+          "reviews/**",
+          ".ash/**",
+          "scripts/**",
+          "ash.py",
+          ".kiro/steering/**",
+          ".kiro/agents/**",
+          ".kiro/hooks/**",
+          ".githooks/**"
+        ],
+        "effect": "deny"
+      }
+    ]
+  },
+  "includeMcpJson": false,
+  "hooks": [
+    {
+      "name": "ASH bloquear atos humanos",
+      "trigger": "PreToolUse",
+      "matcher": "shell",
+      "action": {
+        "type": "command",
+        "command": "python scripts/bloquear_atos_humanos.py"
+      }
+    }
+  ]
+}

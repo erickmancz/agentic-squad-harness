@@ -1,0 +1,77 @@
+{
+  "descricao": "Vulnerabilidades conhecidas nas ferramentas do harness (requirements-tools.txt) que o autor do harness decidiu aceitar, de forma explícita e revisável. Quem lê: python ash.py testar-harness --auditoria. Cada aceite vence na data de revisão (90 dias depois da decisão no máximo); estender exige nova decisão, com nova data. Nenhum agente cria nem prorroga aceites. Regras: README, seção 'Riscos aceitos nas ferramentas do harness'; spec, decisão D19 e L12.",
+  "aceites": [
+    {
+      "id": "CVE-2026-59951",
+      "pacote": "mcp",
+      "versao_afetada": "1.29.0",
+      "motivo": "Sessões do servidor Streamable HTTP do MCP sem expiração (esgotamento de recursos). O Semgrep 1.181.0 fixa mcp==1.29.0 e nenhuma versão do Semgrep até 1.185.0 declara mcp 1.30.0 ou superior; forçar a versão corrigida faz o pip check falhar. O ASH só roda 'semgrep scan' em arquivos locais, sem iniciar servidor MCP (indício, não prova: não verifiquei os caminhos internos do Semgrep).",
+      "fonte": "https://osv.dev/vulnerability/CVE-2026-59951 e https://github.com/semgrep/semgrep/issues/11992, consultados em 13/11/2026",
+      "decidido_em": "2026-11-13",
+      "revisar_em": "2027-02-11",
+      "decidido_por": "autor do harness",
+      "validade": "aceite válido para o template; cada cliente revalida com o seu time de segurança",
+      "sai_quando": {"pacote_que_declara": "semgrep", "exige": {"pacote": "mcp", "minimo": "1.30.0"}}
+    },
+    {
+      "id": "CVE-2026-116684",
+      "pacote": "mcp",
+      "versao_afetada": "1.29.0",
+      "motivo": "Autenticação bearer do servidor MCP aceita token emitido para outro recurso. Mesmo contexto do CVE-2026-59951: dependência fixada pelo Semgrep, sem servidor MCP no uso do ASH.",
+      "fonte": "https://osv.dev/vulnerability/CVE-2026-116684, consultado em 13/11/2026",
+      "decidido_em": "2026-11-13",
+      "revisar_em": "2027-02-11",
+      "decidido_por": "autor do harness",
+      "validade": "aceite válido para o template; cada cliente revalida com o seu time de segurança",
+      "sai_quando": {"pacote_que_declara": "semgrep", "exige": {"pacote": "mcp", "minimo": "1.30.0"}}
+    },
+    {
+      "id": "CVE-2026-116685",
+      "pacote": "mcp",
+      "versao_afetada": "1.29.0",
+      "motivo": "Transportes HTTP do cliente MCP seguem redirecionamentos para outra origem levando cabeçalhos e corpos. Mesmo contexto: dependência fixada pelo Semgrep; o ASH não usa o cliente MCP do Semgrep.",
+      "fonte": "https://osv.dev/vulnerability/CVE-2026-116685, consultado em 13/11/2026",
+      "decidido_em": "2026-11-13",
+      "revisar_em": "2027-02-11",
+      "decidido_por": "autor do harness",
+      "validade": "aceite válido para o template; cada cliente revalida com o seu time de segurança",
+      "sai_quando": {"pacote_que_declara": "semgrep", "exige": {"pacote": "mcp", "minimo": "1.30.0"}}
+    },
+    {
+      "id": "CVE-2026-116686",
+      "pacote": "mcp",
+      "versao_afetada": "1.29.0",
+      "motivo": "O cliente MCP busca URLs '$ref' escolhidas pelo servidor ao validar o schema de saída de ferramentas. Mesmo contexto: dependência fixada pelo Semgrep; o ASH não usa o cliente MCP do Semgrep.",
+      "fonte": "https://osv.dev/vulnerability/CVE-2026-116686, consultado em 13/11/2026",
+      "decidido_em": "2026-11-13",
+      "revisar_em": "2027-02-11",
+      "decidido_por": "autor do harness",
+      "validade": "aceite válido para o template; cada cliente revalida com o seu time de segurança",
+      "sai_quando": {"pacote_que_declara": "semgrep", "exige": {"pacote": "mcp", "minimo": "1.30.0"}}
+    },
+    {
+      "id": "CVE-2026-114603",
+      "pacote": "opentelemetry-api",
+      "versao_afetada": "1.37.0",
+      "motivo": "Leitura sem limite do cabeçalho tracestate (expressão regular) em TraceContextTextMapPropagator.extract, que só atinge quem extrai contexto de cabeçalhos controlados por atacante. O Semgrep 1.181.0 declara opentelemetry-api~=1.37.0 e nenhuma versão até 1.185.0 admite 1.45.1 ou superior. O ASH roda 'semgrep scan' local com --metrics=off (indício, não prova).",
+      "fonte": "https://osv.dev/vulnerability/CVE-2026-114603, consultado em 13/11/2026",
+      "decidido_em": "2026-11-13",
+      "revisar_em": "2027-02-11",
+      "decidido_por": "autor do harness",
+      "validade": "aceite válido para o template; cada cliente revalida com o seu time de segurança",
+      "sai_quando": {"pacote_que_declara": "semgrep", "exige": {"pacote": "opentelemetry-api", "minimo": "1.45.1"}}
+    },
+    {
+      "id": "CVE-2026-126360",
+      "pacote": "opentelemetry-api",
+      "versao_afetada": "1.37.0",
+      "motivo": "Retrocesso quadrático da expressão regular do traceparent em TraceContextTextMapPropagator.extract (negação de serviço com portador controlado por atacante). Mesmo contexto do CVE-2026-114603; corrigido em 1.45.2.",
+      "fonte": "https://osv.dev/vulnerability/CVE-2026-126360, consultado em 13/11/2026",
+      "decidido_em": "2026-11-13",
+      "revisar_em": "2027-02-11",
+      "decidido_por": "autor do harness",
+      "validade": "aceite válido para o template; cada cliente revalida com o seu time de segurança",
+      "sai_quando": {"pacote_que_declara": "semgrep", "exige": {"pacote": "opentelemetry-api", "minimo": "1.45.2"}}
+    }
+  ]
+}

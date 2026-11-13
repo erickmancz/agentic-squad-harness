@@ -1,0 +1,42 @@
+{
+  "nome": "python-aws",
+  "descricao": "Perfil python mais testes de integração do projeto contra o AWS Emulator local (para projetos Python que usam serviços AWS)",
+  "testado": false,
+  "pasta_codigo": "src",
+  "pasta_testes": "tests",
+  "arquivos_teste": ["tests/**/test_*.py"],
+  "cobertura_minima": 80,
+  "setup": [
+    {"comando": ["{python}", "-m", "venv", ".venv"], "se_nao_existe": ".venv"},
+    ["{py}", "-m", "pip", "install", "-q", "--upgrade", "pip"],
+    ["{py}", "-m", "pip", "install", "-q", "-r", "requirements.txt", "-r", "requirements-dev.txt"]
+  ],
+  "testar": ["{py}", "-m", "pytest", "-q", "--ignore=tests/integracao_aws"],
+  "etapas": [
+    {"nome": "testes", "comando": ["{py}", "-m", "pytest", "-q", "--ignore=tests/integracao_aws", "--cov={codigo}", "--cov-report=term-missing", "--cov-fail-under={cobertura}"]},
+    {"nome": "sast", "comando": ["{semgrep}", "scan", "--config", ".semgrep/", "--metrics=off", "--error", "--quiet", "{codigo}/"]},
+    {"nome": "dependencias", "comando": ["{pip-audit}", "-r", "requirements.txt", "--progress-spinner", "off"]},
+    {"nome": "harness", "comando": ["{python}", "ash.py", "testar-harness"]},
+    {"nome": "integracao-aws", "requer": "emulador_aws", "comando": ["{py}", "-m", "pytest", "tests/integracao_aws", "-q"]}
+  ],
+  "emulador_aws": {
+    "versao": "1.0.343",
+    "pacote_url_base": "https://downloads.aws.com/aws-emulator/packages/aws-emulator/LTS/",
+    "fonte": "Versão e nome do pacote: https://docs.aws.amazon.com/emulator/latest/userguide/versioning.html e HEAD em downloads.aws.com (aws-emulator-1.0.343-1-x86_64.rpm respondeu 200), consultados em 13/11/2026. A fidelidade de cada serviço vem da nota 'k de n' da página de releases da versão fixada (https://github.com/aws/aws-emulator/releases); preencha com fonte e data. null conta como abaixo do corte.",
+    "servicos": [
+      {"nome": "s3", "fidelidade": null},
+      {"nome": "dynamodb", "fidelidade": null},
+      {"nome": "sts", "fidelidade": null}
+    ],
+    "fidelidade_minima": 80
+  },
+  "_instrucoes": [
+    "Este perfil é para projetos Python que chamam serviços AWS. Para ativar: python ash.py perfil python-aws, python ash.py setup e publique pelo portão publicar-harness. Projetos que não usam AWS ficam no perfil python: o ci deles não exige o emulador.",
+    "O projeto que usa AWS declara o boto3, com versão exata (boto3==X.Y.Z), no próprio requirements.txt: a etapa dependencias só audita esse arquivo. O python ash.py perfil python-aws e o ci avisam se o boto3 estiver ausente ou sem versão exata.",
+    "Copie templates/tests-integracao-aws/ para tests/integracao_aws/ e troque o teste de exemplo pelos testes do projeto. Eles leem o endpoint e as credenciais do ambiente (AWS_ENDPOINT_URL e demais AWS_*), que o ash.py monta só para a etapa integracao-aws; o conftest.py da pasta aborta se o endpoint não for local ou se as credenciais não forem as do emulador.",
+    "Os comandos testes e testar levam --ignore=tests/integracao_aws para a integração não rodar sem emulador; os testes dela citam '<ID da spec> CA-NN' como os demais, e o rastreio os conta.",
+    "Em emulador_aws.servicos, liste os serviços AWS que o projeto realmente usa e preencha a fidelidade de cada um (percentual da nota 'k de n' da página de releases da versão fixada, com fonte e data). fidelidade null conta como abaixo do corte (fidelidade_minima).",
+    "Regra de fidelidade por faixa (steering 01): autonoma exige integracao-aws verde; semiautonoma exige também a execução em conta real de homologação (papel homologacao) para serviço abaixo do corte ou com fidelidade null; critica exige a homologação sempre. Enquanto a fidelidade for null, a faixa semiautonoma exige homologação.",
+    "Este perfil está marcado como não testado: nenhum modo do emulador foi executado de ponta a ponta com ele. Depois de rodar o ci com o emulador de pé no projeto, mude testado para true."
+  ]
+}

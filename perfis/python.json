@@ -1,0 +1,21 @@
+{
+  "nome": "python",
+  "descricao": "Python 3.12 com pytest e cobertura, Semgrep com as regras de .semgrep/ e pip-audit",
+  "testado": true,
+  "pasta_codigo": "src",
+  "pasta_testes": "tests",
+  "arquivos_teste": ["tests/**/test_*.py"],
+  "cobertura_minima": 80,
+  "setup": [
+    {"comando": ["{python}", "-m", "venv", ".venv"], "se_nao_existe": ".venv"},
+    ["{py}", "-m", "pip", "install", "-q", "--upgrade", "pip"],
+    ["{py}", "-m", "pip", "install", "-q", "-r", "requirements.txt", "-r", "requirements-dev.txt"]
+  ],
+  "testar": ["{py}", "-m", "pytest", "-q"],
+  "etapas": [
+    {"nome": "testes", "comando": ["{py}", "-m", "pytest", "-q", "--cov={codigo}", "--cov-report=term-missing", "--cov-fail-under={cobertura}"]},
+    {"nome": "sast", "comando": ["{semgrep}", "scan", "--config", ".semgrep/", "--metrics=off", "--error", "--quiet", "{codigo}/"]},
+    {"nome": "dependencias", "comando": ["{pip-audit}", "-r", "requirements.txt", "--progress-spinner", "off"]},
+    {"nome": "harness", "comando": ["{python}", "ash.py", "testar-harness"]}
+  ]
+}

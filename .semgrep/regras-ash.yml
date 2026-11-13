@@ -1,0 +1,46 @@
+rules:
+  - id: ash-sem-eval-exec
+    languages: [python]
+    severity: ERROR
+    message: Uso de eval/exec. Risco de execução de código arbitrário.
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+  - id: ash-sem-float-para-dinheiro
+    languages: [python]
+    severity: ERROR
+    message: Valor monetário com float. Use decimal.Decimal (convenção do steering 03).
+    patterns:
+      - pattern: float(...)
+      - pattern-inside: |
+          def $F(...):
+            ...
+      - metavariable-regex:
+          metavariable: $F
+          regex: (?i).*(valor|preco|total|desconto|tarifa|taxa|custo|saldo|juros|premio|cobertura|amount|price|fee|balance|cost).*
+  - id: ash-sem-dado-pessoal-em-log
+    languages: [python]
+    severity: ERROR
+    message: Possível dado pessoal em log (governança do núcleo, regras de dado).
+    patterns:
+      - pattern-either:
+          - pattern: logging.$M(..., $X, ...)
+          - pattern: $LOGGER.$M(..., $X, ...)
+          - pattern: print(..., $X, ...)
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?i).*(cpf|cnpj|email|telefone|nome_completo).*
+  - id: ash-sem-segredo-no-codigo
+    languages: [python]
+    severity: ERROR
+    message: Possível segredo fixo no código.
+    patterns:
+      - pattern: $K = "..."
+      - metavariable-regex:
+          metavariable: $K
+          regex: (?i).*(password|senha|secret|token|api_key|apikey).*
+  - id: ash-sem-subprocess-shell
+    languages: [python]
+    severity: ERROR
+    message: subprocess com shell=True.
+    pattern: subprocess.$F(..., shell=True, ...)

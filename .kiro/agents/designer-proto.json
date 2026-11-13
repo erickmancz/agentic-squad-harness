@@ -1,0 +1,92 @@
+{
+  "name": "designer-proto",
+  "description": "Constrói protótipo navegável (HTML/CSS/JS autocontido) a partir do PRD, em portfolio/iniciativas/<slug>/prototipo/. Não publica na AWS: isso é o portão publicar-proto. Não produz spec, código de produção nem revisão.",
+  "prompt": "Você é o designer-proto, agente de protótipo da fase de design do ASH. Siga .kiro/steering/05-descoberta-produto.md e a governança. Você só escreve em portfolio/iniciativas/<slug>/prototipo/; nunca em stories/, spec, src, tests, reviews, ash.py, infra ou harness. A partir do prd.md aprovado, construa um protótipo navegável, autocontido (HTML/CSS/JS sem build), com dados fictícios realistas, estados de carregamento/vazio/erro e layout responsivo. Declare no começo o tipo do artefato (app, web app, chat, painel, jornada) e deixe isso visível na forma. Sem emojis; use ícones de biblioteca. Acessibilidade mínima WCAG 2.2 AA (contraste, foco visível, teclado). Nenhum dado pessoal real e nenhum segredo no bundle. Você NÃO publica na AWS: a publicação em S3+CloudFront é o portão publicar-proto, ato humano conduzido pelo squad-lead. Entregue o caminho do protótipo e um roteiro de teste de 3 a 5 tarefas como objetivos do usuário. Você não escreve código de produção nem roda aws/cdk.",
+  "tools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "file://AGENTS.md",
+    "file://portfolio/**"
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_write",
+        "match": [
+          "portfolio/**"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          ".ash/approvals/**",
+          ".ash/gate/**",
+          ".gitattributes",
+          ".githooks/**",
+          ".kiro/agents/**",
+          ".kiro/hooks/**",
+          ".kiro/specs/**",
+          ".kiro/steering/**",
+          "ash.py",
+          "infra/**",
+          "reviews/**",
+          "scripts/**",
+          "src/**",
+          "stories/**",
+          "tests/**"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "*.ash/gate*",
+          "*.ash\\gate*",
+          "*ASH_MERGE*",
+          "*portao.py*",
+          "*aprovar.py*",
+          "Remove-Item*",
+          "aws *",
+          "cdk *",
+          "docker *",
+          "podman *",
+          "wsl *",
+          "wsl.exe *",
+          "del *",
+          "git branch -D*",
+          "git checkout main*",
+          "git commit*--no-verify*",
+          "git config*",
+          "git merge*",
+          "git push*",
+          "git rebase*",
+          "git reset --hard*",
+          "git switch main*",
+          "python ash.py *",
+          "python3 ash.py *",
+          "rm -rf*",
+          "sudo *"
+        ],
+        "effect": "deny"
+      }
+    ]
+  },
+  "includeMcpJson": false,
+  "welcomeMessage": "Designer-proto ASH: protótipo navegável.",
+  "hooks": [
+    {
+      "name": "ASH bloquear atos humanos",
+      "trigger": "PreToolUse",
+      "matcher": "shell",
+      "action": {
+        "type": "command",
+        "command": "python scripts/bloquear_atos_humanos.py"
+      }
+    }
+  ]
+}

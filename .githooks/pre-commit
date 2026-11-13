@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# ASH: commit direto na main só pelo ash.py (portões merge e publicar-harness, ASH_MERGE=1) ou pelo setup inicial.
+# Observação honesta: hook local pode ser contornado com --no-verify. A proteção definitiva
+# vem com a branch protection da plataforma Git do cliente.
+branch="$(git branch --show-current 2>/dev/null)"
+if [ "$branch" = "main" ] && [ "${ASH_MERGE:-0}" != "1" ]; then
+  echo "ASH: commit direto na main não é permitido. Trabalhe numa branch feat/<id>; a main só recebe mudanças pelos portões do squad-lead." >&2
+  exit 1
+fi
+exit 0

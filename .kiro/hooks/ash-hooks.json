@@ -1,0 +1,26 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "ASH validar spec ao salvar",
+      "description": "Roda o validador de dez blocos sempre que um requirements.md de spec é salvo.",
+      "trigger": "PostFileSave",
+      "matcher": "\\.kiro/specs/.*requirements\\.md$",
+      "action": {
+        "type": "command",
+        "command": "python scripts/validar_spec.py --todas --sem-status"
+      },
+      "timeout": 30
+    },
+    {
+      "name": "ASH pendências ao final do turno",
+      "description": "Ao final de cada turno do agente, lista specs com perguntas em aberto, specs sem aprovação e gates pendentes.",
+      "trigger": "Stop",
+      "action": {
+        "type": "command",
+        "command": "python scripts/pendencias.py"
+      },
+      "timeout": 30
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "name": "implementador",
+  "description": "Implementa as tasks de uma spec aprovada, com testes que citam cada critério de aceite.",
+  "prompt": "Você é o implementador. Só trabalhe em spec com status aprovada e com design.md e tasks.md presentes (confira com python scripts/validar_spec.py). Trabalhe na branch feat/<id-da-spec-em-minusculas> já criada pelo squad-lead. Nunca trabalhe na main. Siga tasks.md em ordem. Para cada critério CA-NN escreva ao menos um teste na pasta de testes do perfil de stack (ash-perfil.json; padrão tests/) cujo nome, docstring ou comentário cite '<ID> CA-NN'. Use a linguagem, o framework de teste e as convenções do perfil ativo e do steering 03. Respeite o bloco 'Limites do agente' da spec: o que estiver lá você não decide; pare e pergunte. Depois de cada task: rode python ash.py testar (comando de teste do perfil de stack), faça git add e git commit com mensagem '<ID> task N: resumo' e rode python scripts/registrar_evento.py task_concluida --spec <ID> --ator agente --faixa <faixa>. Você não edita reviews/, scripts/, .kiro/ nem .ash/approvals/. Você nunca faz merge, push ou aprovação.",
+  "tools": [
+    "read",
+    "write",
+    "shell"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "file://AGENTS.md"
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_write",
+        "match": [
+          "src/**",
+          "tests/**",
+          "README.md",
+          "requirements.txt",
+          "pyproject.toml",
+          "package.json",
+          "package-lock.json",
+          "pom.xml",
+          "build.gradle",
+          "build.gradle.kts",
+          "**/*.csproj",
+          "go.mod",
+          "go.sum"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          "reviews/**",
+          ".kiro/**",
+          "tests_harness/**",
+          "tests_harness_integracao/**"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          ".ash/approvals/**",
+          ".gitattributes",
+          ".githooks/**",
+          ".kiro/agents/**",
+          ".kiro/hooks/**",
+          ".kiro/steering/**",
+          "ash.py",
+          "scripts/**"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "python scripts/validar_spec.py*",
+          "python3 scripts/validar_spec.py*",
+          "python scripts/registrar_evento.py task_concluida*",
+          "python3 scripts/registrar_evento.py task_concluida*",
+          "git add *",
+          "git commit *",
+          "git status*",
+          "git diff*",
+          "git log*",
+          "git branch --show-current*",
+          "python ash.py testar*",
+          "python3 ash.py testar*",
+          "python ash.py etapa testes*",
+          "python3 ash.py etapa testes*",
+          "python ash.py etapa integracao-aws*",
+          "python3 ash.py etapa integracao-aws*"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "*.ash/gate*",
+          "*.ash\\gate*",
+          "*ASH_MERGE*",
+          "*portao.py*",
+          "Remove-Item*",
+          "aws *",
+          "cdk *",
+          "del *",
+          "git branch -D*",
+          "git checkout main*",
+          "git commit*--no-verify*",
+          "git config*",
+          "git merge*",
+          "git push*",
+          "git rebase*",
+          "git reset --hard*",
+          "git switch main*",
+          "python ash.py aprovar*",
+          "python ash.py backup*",
+          "python ash.py bootstrap*",
+          "python ash.py merge*",
+          "python ash.py metricas*",
+          "python ash.py nova-spec*",
+          "python ash.py portao*",
+          "python ash.py restaurar*",
+          "python ash.py setup*",
+          "python ash.py teardown*",
+          "python scripts/aprovar.py*",
+          "python3 ash.py aprovar*",
+          "python3 ash.py backup*",
+          "python3 ash.py bootstrap*",
+          "python3 ash.py merge*",
+          "python3 ash.py metricas*",
+          "python3 ash.py nova-spec*",
+          "python3 ash.py portao*",
+          "python3 ash.py restaurar*",
+          "python3 ash.py setup*",
+          "python3 ash.py teardown*",
+          "python3 scripts/aprovar.py*",
+          "rm -rf*",
+          "sudo *",
+          "python ash.py perfil*",
+          "python ash.py emulador*",
+          "python3 ash.py emulador*",
+          "docker *",
+          "podman *",
+          "wsl *",
+          "wsl.exe *",
+          "python3 ash.py perfil*",
+          "python ash.py publicar-proto*",
+          "python ash.py publicar-harness*",
+          "python ash.py sync*",
+          "python ash.py nova-descoberta*",
+          "python ash.py configurar*",
+          "python3 ash.py publicar-proto*",
+          "python3 ash.py publicar-harness*",
+          "python3 ash.py sync*",
+          "python3 ash.py nova-descoberta*",
+          "python3 ash.py configurar*"
+        ],
+        "effect": "deny"
+      }
+    ]
+  },
+  "includeMcpJson": false,
+  "welcomeMessage": "Implementador ASH. Qual spec aprovada?",
+  "hooks": [
+    {
+      "name": "ASH bloquear atos humanos",
+      "trigger": "PreToolUse",
+      "matcher": "shell",
+      "action": {
+        "type": "command",
+        "command": "python scripts/bloquear_atos_humanos.py"
+      }
+    }
+  ]
+}

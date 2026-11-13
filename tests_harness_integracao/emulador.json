@@ -1,0 +1,11 @@
+{
+  "versao": "1.0.343",
+  "pacote_url_base": "https://downloads.aws.com/aws-emulator/packages/aws-emulator/LTS/",
+  "fonte": "Configuração do AWS Emulator usada só pelos testes de integração do próprio ASH (python ash.py testar-harness --integracao); não faz parte do perfil de stack de nenhum projeto. Versão e nome do pacote: https://docs.aws.amazon.com/emulator/latest/userguide/versioning.html e HEAD em downloads.aws.com (aws-emulator-1.0.343-1-x86_64.rpm respondeu 200), consultados em 13/11/2026. A fidelidade de cada serviço vem da nota 'k de n' da página de releases da versão fixada (https://github.com/aws/aws-emulator/releases); preencha com fonte e data. null conta como abaixo do corte.",
+  "servicos": [
+    {"nome": "s3", "fidelidade": null},
+    {"nome": "dynamodb", "fidelidade": null},
+    {"nome": "sts", "fidelidade": null}
+  ],
+  "fidelidade_minima": 80
+}

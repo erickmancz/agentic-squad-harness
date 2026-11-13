@@ -1,0 +1,12 @@
+{
+  "app": "python app.py",
+  "context": {
+    "owner": "",
+    "costCenter": "",
+    "env": "dev",
+    "squad": "minha-squad",
+    "codeNoncurrentDays": 180,
+    "eventsRawDays": 90,
+    "logRetentionDays": 30
+  }
+}
