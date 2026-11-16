@@ -28,8 +28,14 @@ inclusion: always
 ## Regras de dado
 
 - Nenhum nome, marca ou dado real de cliente neste repositório. Exemplos são fictícios.
-- Nenhum dado pessoal em log, teste ou exemplo (CPF, nome real, e-mail real, telefone).
+- Nenhum dado pessoal real em teste, exemplo, spec ou revisão (CPF, nome real, e-mail real, telefone). O registro de execução que a spec aprovada manda gravar, com finalidade e retenção escritas, é permitido.
+- Identificador de pessoa (usuário, atendente, solicitante, e-mail, login, matrícula ou cabeçalho que diga quem fez a chamada) é dado pessoal, mesmo quando é só declarado e não comprovado. A spec que o grava ou devolve escreve a finalidade, a retenção (ou "a definir", com pergunta em aberto) e que nenhum outro dado pessoal entra no registro. Nenhum agente descreve esse registro, log ou auditoria como "sem dado pessoal"; "sem dado pessoal do segurado" só vale dizendo qual dado pessoal existe.
 - Todo campo novo de dado pessoal tem finalidade escrita no bloco "Dados e integrações" da spec (LGPD, Lei Geral de Proteção de Dados). Dado pessoal sensível, como definido no art. 5º, II da LGPD (origem racial ou étnica, convicção religiosa, opinião política, filiação a sindicato ou a organização de caráter religioso, filosófico ou político, dado de saúde ou de vida sexual, dado genético ou biométrico), leva a spec para a faixa `critica`.
+
+## Números sem fonte
+
+- Nenhum agente inventa prazo, meta, limite, percentual, tempo de resposta ou valor que a story, o PO, o FDE, a norma ou o documento citado na spec não deram. Vale para a spec, o design e o código (timeout, tamanho de página, tentativas, TTL). Sem fonte, escreve "a definir" no texto e registra o ponto em "Perguntas em aberto" (spec e design) ou para e pergunta (código).
+- Número oferecido como opção de pergunta é sugestão sem fonte: só entra na spec depois da decisão do humano, e a spec registra o valor e quem decidiu.
 
 ## Adaptação a cada cliente
 
@@ -45,3 +51,5 @@ O núcleo desta governança vale para qualquer frente, vertical e stack. O que m
 - A tarefa exige decisão de arquitetura ou de requisito não funcional que a spec não define.
 - A faixa é `critica` e o `dev_revisor` está vazio.
 - O comando de um ato humano respondeu `[PORTÃO]` sem confirmação.
+- A spec se contradiz, ou o design precisa de algo que a spec não prevê.
+- Falta um número que a story, o PO ou o FDE não deram.

@@ -56,7 +56,7 @@ def registrar_aprovacao(spec_id: str, papel: str, nome: str, branch: str, commit
         **({"evidencia": evidencia["evidencia"]} if evidencia.get("evidencia") else {}),
     }]
     PASTA.mkdir(parents=True, exist_ok=True)
-    arq.write_text(json.dumps(dados, ensure_ascii=False, indent=2), encoding="utf-8")
+    arq.write_text(json.dumps(dados, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
 
 
 def checar_spec_aprovavel(caminho: Path) -> None:
@@ -74,7 +74,7 @@ def aprovar_spec(caminho: Path, nome: str, evidencia: dict) -> None:
     spec = a.ler(caminho)
     texto = caminho.read_text(encoding="utf-8")
     texto = re.sub(r"^status:.*$", "status: aprovada", texto, count=1, flags=re.M)
-    caminho.write_text(texto, encoding="utf-8")
+    caminho.write_text(texto, encoding="utf-8", newline="\n")
     registrar_aprovacao(spec.id, "po", nome, "", "", evidencia)
     ev.gravar("spec_aprovada", spec.id, "humano", spec.meta["faixa"],
               {"po": nome, "canal": evidencia.get("canal", "")})

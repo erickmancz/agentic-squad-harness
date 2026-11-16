@@ -6,8 +6,9 @@ Nomes de função não aceitam hífen, então também vale 'ins_014_ca_01' no no
 Os arquivos de teste vêm do campo arquivos_teste do perfil de stack (ash-perfil.json); sem perfil,
 vale o padrão Python tests/**/test_*.py.
 
-Uso: python scripts/rastrear_aceite.py [--todas-as-specs]
-Exit 0 se todos os critérios têm teste; exit 1 caso contrário.
+Uso: python scripts/rastrear_aceite.py [ID ...] [--todas-as-specs]
+Sem ID, confere todas as specs aprovadas (é o que o ci faz). Com um ou mais IDs, confere e informa só os critérios dessas specs.
+Exit 0 se todos os critérios têm teste; exit 1 se faltar teste; exit 2 se um ID não existe entre as specs consideradas.
 """
 from __future__ import annotations
 
@@ -50,27 +51,38 @@ def referencias(texto_testes: str, spec_id: str, ca: str) -> bool:
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--todas-as-specs", action="store_true", help="inclui specs que não estão aprovadas")
-    p.add_argument("ignorados", nargs="*", help="caminhos aceitos e ignorados: o rastreio sempre cobre todas as specs")
+    p.add_argument("ids", nargs="*", help="IDs das specs a conferir (ex.: INS-017); sem ID, todas as specs aprovadas")
     args = p.parse_args(argv)
 
     texto = texto_dos_testes()
 
+    pedidos = {i.strip().upper() for i in args.ids}
+    encontrados = set()
     faltando = []
     total = 0
     for caminho in a.todas():
         spec = a.ler(caminho)
         if not args.todas_as_specs and spec.meta.get("status") != "aprovada":
             continue
+        if pedidos and spec.id.upper() not in pedidos:
+            continue
+        encontrados.add(spec.id.upper())
         for ca in spec.criterios:
             total += 1
             if not referencias(texto, spec.id, ca):
                 faltando.append(f"{spec.id} {ca}")
+    ausentes = sorted(pedidos - encontrados)
+    if ausentes:
+        print(f"[ERRO] spec não encontrada entre as consideradas (aprovadas, ou todas com --todas-as-specs): "
+              f"{', '.join(ausentes)}", file=sys.stderr)
+        return 2
     if faltando:
         print(f"[ERRO] {len(faltando)} de {total} critério(s) sem teste:", file=sys.stderr)
         for f in faltando:
             print(f"  - {f}", file=sys.stderr)
         return 1
-    print(f"[OK] {total} critério(s) com teste rastreado")
+    alvo = f" de {', '.join(sorted(encontrados))}" if pedidos else ""
+    print(f"[OK] {total} critério(s){alvo} com teste rastreado")
     return 0
 
 

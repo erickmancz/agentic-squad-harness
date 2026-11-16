@@ -82,3 +82,63 @@ def test_spec_nao_aprovada_fica_fora_do_rastreio_por_padrao(repo_falso):
     arq.write_text(SPEC.replace("status: aprovada", "status: rascunho"), encoding="utf-8")
     assert rastrear_aceite.main([]) == 0
     assert rastrear_aceite.main(["--todas-as-specs"]) == 1
+
+
+def _segunda_spec(repo_falso):
+    pasta = repo_falso / ".kiro" / "specs" / "ins-901-outra"
+    pasta.mkdir(parents=True)
+    texto = SPEC.replace("INS-900", "INS-901")
+    (pasta / "requirements.md").write_text(texto, encoding="utf-8")
+
+
+def test_com_id_so_conta_e_informa_os_criterios_daquela_spec(repo_falso, capsys):
+    import rastrear_aceite
+    _segunda_spec(repo_falso)
+    (repo_falso / "test" / "a.spec.ts").write_text("// INS-900 CA-01\n// INS-900 CA-02\n", encoding="utf-8")
+    assert rastrear_aceite.main(["INS-900"]) == 0
+    saida = capsys.readouterr().out
+    assert "2 critério(s) de INS-900" in saida
+    assert "INS-901" not in saida
+
+
+def test_com_id_nao_falha_por_criterio_de_outra_spec(repo_falso, capsys):
+    import rastrear_aceite
+    _segunda_spec(repo_falso)
+    (repo_falso / "test" / "a.spec.ts").write_text("// INS-900 CA-01\n// INS-900 CA-02\n", encoding="utf-8")
+    assert rastrear_aceite.main([]) == 1  # sem ID, a INS-901 sem teste derruba o rastreio
+    capsys.readouterr()
+    assert rastrear_aceite.main(["INS-900"]) == 0
+    assert rastrear_aceite.main(["ins-900"]) == 0  # o ID não diferencia maiúsculas
+
+
+def test_com_id_aponta_so_os_criterios_faltantes_daquela_spec(repo_falso, capsys):
+    import rastrear_aceite
+    _segunda_spec(repo_falso)
+    (repo_falso / "test" / "a.spec.ts").write_text("// INS-900 CA-01\n// INS-901 CA-01\n", encoding="utf-8")
+    assert rastrear_aceite.main(["INS-900"]) == 1
+    erro = capsys.readouterr().err
+    assert "INS-900 CA-02" in erro
+    assert "INS-901" not in erro
+
+
+def test_id_inexistente_sai_com_erro_dois(repo_falso, capsys):
+    import rastrear_aceite
+    assert rastrear_aceite.main(["INS-777"]) == 2
+    assert "INS-777" in capsys.readouterr().err
+
+
+def test_id_de_spec_nao_aprovada_so_vale_com_todas_as_specs(repo_falso):
+    import rastrear_aceite
+    arq = repo_falso / ".kiro" / "specs" / "ins-900-teste" / "requirements.md"
+    arq.write_text(SPEC.replace("status: aprovada", "status: rascunho"), encoding="utf-8")
+    assert rastrear_aceite.main(["INS-900"]) == 2
+    assert rastrear_aceite.main(["INS-900", "--todas-as-specs"]) == 1
+
+
+def test_varios_ids_somam_os_criterios(repo_falso, capsys):
+    import rastrear_aceite
+    _segunda_spec(repo_falso)
+    (repo_falso / "test" / "a.spec.ts").write_text(
+        "// INS-900 CA-01\n// INS-900 CA-02\n// INS-901 CA-01\n// INS-901 CA-02\n", encoding="utf-8")
+    assert rastrear_aceite.main(["INS-900", "INS-901"]) == 0
+    assert "4 critério(s) de INS-900, INS-901" in capsys.readouterr().out

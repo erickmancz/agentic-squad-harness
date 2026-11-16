@@ -275,6 +275,12 @@ def branch_atual() -> str:
     return saida(["git", "branch", "--show-current"])
 
 
+def spec_da_branch(branch: str) -> str:
+    """ID da spec inferido de uma branch feat/<id> (feat/ins-017 vira INS-017); vazio se a branch não segue o padrão."""
+    m = re.fullmatch(r"feat/([A-Za-z0-9]+-[0-9]+)", (branch or "").strip())
+    return m.group(1).upper() if m else ""
+
+
 def _agora_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -372,6 +378,7 @@ def cmd_setup(a) -> int:
     if corrigidos:
         print(f"[OK] permissão de execução aplicada aos hooks: {', '.join(corrigidos)}")
     rodar(["git", "config", "core.autocrlf", "false"])
+    rodar(["git", "config", "core.safecrlf", "false"])
     if cfg.get("ASH_GIT_NOME"):
         rodar(["git", "config", "user.name", cfg["ASH_GIT_NOME"]])
     if cfg.get("ASH_GIT_EMAIL"):
@@ -598,7 +605,8 @@ def cmd_ci(a) -> int:
     nomes_emulador = {e["nome"] for e in pf["etapas"] if e.get("requer") == "emulador_aws"}
     detalhe = {"status": status, "commit": saida(["git", "rev-parse", "--short", "HEAD"]) or "sem-commit"}
     detalhe.update(emulador.evidencia(pf.get("emulador_aws"), [(n, st) for n, st in resultado if n in nomes_emulador]))
-    ev.gravar("ci_executado", getattr(a, "spec", None) or os.environ.get("ASH_SPEC", "NA"), ator_do_ci(), "", detalhe)
+    spec_id = getattr(a, "spec", None) or os.environ.get("ASH_SPEC") or spec_da_branch(branch_atual()) or "NA"
+    ev.gravar("ci_executado", spec_id, ator_do_ci(), "", detalhe)
     if falhou:
         print("CI LOCAL: FALHOU")
         return 1
@@ -619,7 +627,7 @@ def cmd_nova_spec(a) -> int:
         print(f"== {story.name} já existe; mantido")
     else:
         texto = (RAIZ / "templates" / "story-po.md").read_text(encoding="utf-8")
-        story.write_text(re.sub(r"^id: .*$", f"id: {a.id}", texto, count=1, flags=re.M), encoding="utf-8")
+        story.write_text(re.sub(r"^id: .*$", f"id: {a.id}", texto, count=1, flags=re.M), encoding="utf-8", newline="\n")
     print(f"[OK] branch feat/{low} criada; story em stories/{story.name}")
     if remoto():
         print("[INFO] a branch vai para o GitHub no primeiro python ash.py sync, depois do primeiro commit")
@@ -652,12 +660,12 @@ def cmd_aprovar_prd(a) -> int:
     conf = portao_consumir("aprovar-prd", a.id, a.mensagem)
     prd = pasta / "prd.md"
     texto = re.sub(r"^status:.*$", "status: aprovado", prd.read_text(encoding="utf-8"), count=1, flags=re.M)
-    prd.write_text(texto, encoding="utf-8")
+    prd.write_text(texto, encoding="utf-8", newline="\n")
     arq = RAIZ / ".ash" / "approvals" / f"{a.id}-prd.json"
     arq.parent.mkdir(parents=True, exist_ok=True)
     arq.write_text(json.dumps({"spec_id": a.id, "papel": "prd", "nome": a.nome, "ts": _agora_iso(),
                                "canal": conf["canal"], "texto_humano": conf["texto_humano"],
-                               "portao": conf.get("id", "")}, ensure_ascii=False, indent=2), encoding="utf-8")
+                               "portao": conf.get("id", "")}, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
     ev.gravar("prd_aprovado", a.id, "humano", "descoberta", {"nome": a.nome, "canal": conf["canal"]})
     print(f"[OK] PRD de {a.id} aprovado por {a.nome}. "
           f"Gere a story com: python ash.py nova-descoberta {a.id} <slug>")
@@ -687,7 +695,7 @@ def cmd_nova_descoberta(a) -> int:
                  + f"Esta story foi gerada a partir do PRD aprovado em "
                  + f"portfolio/iniciativas/{pasta.name}/prd.md (fase de descoberta).\n"
                  + "Preencha os campos acima a partir do PRD antes do intake, ou peça ao product-lead.\n")
-        story.write_text(corpo, encoding="utf-8")
+        story.write_text(corpo, encoding="utf-8", newline="\n")
     print(f"[OK] branch feat/{low} criada; story em stories/{story.name} (origem: PRD {pasta.name})")
     if remoto():
         print("[INFO] a branch vai para o GitHub no primeiro python ash.py sync, depois do primeiro commit")

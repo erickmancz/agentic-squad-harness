@@ -85,3 +85,35 @@ def test_ator_do_ci_e_um_valor_aceito_pelos_eventos(ash, monkeypatch):
     assert ash.ator_do_ci() == "agente"
     monkeypatch.setenv("ASH_ATOR", " HUMANO ")
     assert ash.ator_do_ci() == "humano"
+
+
+@pytest.mark.parametrize("branch,esperado", [
+    ("feat/ins-017", "INS-017"), ("feat/INS-017", "INS-017"), ("feat/abc-1", "ABC-1"),
+    ("main", ""), ("", ""), ("feat/sem-numero", ""), ("feat/ins-017-extra", ""), ("hotfix/ins-017", ""),
+])
+def test_spec_da_branch_infere_o_id_so_de_feat_id(ash, branch, esperado):
+    assert ash.spec_da_branch(branch) == esperado
+
+
+def _ci_sem_spec(ash, ci_isolado, monkeypatch, branch):
+    monkeypatch.setattr(ash, "branch_atual", lambda: branch)
+    monkeypatch.delenv("ASH_SPEC", raising=False)
+    ash.cmd_ci(argparse.Namespace(spec=None))
+    return ci_isolado.eventos[0][1]
+
+
+def test_ci_sem_spec_infere_a_spec_pela_branch_feat(ash, ci_isolado, monkeypatch):
+    assert _ci_sem_spec(ash, ci_isolado, monkeypatch, "feat/ins-017") == "INS-017"
+
+
+def test_ci_sem_spec_fora_de_feat_grava_na(ash, ci_isolado, monkeypatch):
+    assert _ci_sem_spec(ash, ci_isolado, monkeypatch, "main") == "NA"
+
+
+def test_ci_spec_do_argumento_e_da_variavel_valem_mais_que_a_branch(ash, ci_isolado, monkeypatch):
+    monkeypatch.setattr(ash, "branch_atual", lambda: "feat/ins-017")
+    monkeypatch.setenv("ASH_SPEC", "INS-099")
+    ash.cmd_ci(argparse.Namespace(spec=None))
+    assert ci_isolado.eventos[0][1] == "INS-099"
+    ash.cmd_ci(argparse.Namespace(spec="INS-050"))
+    assert ci_isolado.eventos[1][1] == "INS-050"

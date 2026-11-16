@@ -289,7 +289,7 @@ No PowerShell 5, não use `2>&1` ao rodar o CI: o redirecionamento transforma a 
 
 ## Exemplos incluídos
 
-O repositório traz uma app fictícia de seguros (`src/endosso/`) com três rodadas completas como referência. O setor e a linguagem da app são só ilustração do fluxo; o ASH não depende deles. As rodadas: INS-014 (aumento de cobertura, faixa crítica), INS-016 (histórico de endossos, faixa semiautônoma) e INS-018 (simulação de aumento, faixa crítica). As três têm spec de dez blocos, design, tasks e testes. A INS-016 e a INS-018 também têm as quatro revisões em `reviews/`; a INS-014 é anterior aos revisores e não tem revisão. Os registros de aprovação e os eventos dessas rodadas não vêm no pacote: a squad começa com `.ash/` limpo. A INS-017 é uma story nova, ainda não implementada, para a primeira demonstração.
+O repositório traz uma app fictícia de seguros (`src/endosso/`) com três rodadas completas como referência. O setor e a linguagem da app são só ilustração do fluxo; o ASH não depende deles. As rodadas: INS-014 (aumento de cobertura, faixa crítica), INS-016 (histórico de endossos, faixa semiautônoma) e INS-018 (simulação de aumento, faixa crítica). As três têm spec de dez blocos, design, tasks e testes. A INS-016 e a INS-018 também têm as quatro revisões em `reviews/`; a INS-014 é anterior aos revisores e não tem revisão. Os registros de aprovação e os eventos dessas rodadas não vêm no pacote: a squad começa com `.ash/` limpo. A INS-017 é uma story de demonstração, não implementada no pacote: serve para a primeira rodada da squad.
 
 ## Documentos
 
